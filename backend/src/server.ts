@@ -1,94 +1,102 @@
 import express from 'express';
 import cors from 'cors';
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import 'dotenv/config';
+import authRoutes from './routes/auth';
+import { authenticateToken } from './middleware/auth';
 import { db } from './db';
 import { expenses, users } from './db/schema';
-import { eq, sql } from 'drizzle-orm';
+import { eq, and, gte } from 'drizzle-orm';
 import { linearRegression } from 'simple-statistics';
-import { authenticateToken } from './middleware/auth';
+import { expenseSchema } from './schemas/expense';
 
 const app = express();
-const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key';
-
 app.use(cors());
 app.use(express.json());
 
-// --- AUTH ROUTES ---
+// Public Routes
+app.use('/api/auth', authRoutes);
 
-// Registration
-app.post('/api/auth/register', async (req, res) => {
-  const { name, email, password } = req.body;
-  const hashedPassword = await bcrypt.hash(password, 10);
+// Protected Expense Logging
+
+
+app.post('/api/expenses', authenticateToken, async (req: any, res) => {
+  // 1. Validate Input
+  const result = expenseSchema.safeParse(req.body);
+  
+  if (!result.success) {
+    return res.status(400).json({ 
+      error: "Validation Failed", 
+      details: result.error.format() 
+    });
+  }
+
+  // 2. If valid, proceed to DB
+  const { amount, category, description, createdAt } = result.data;
   
   try {
-    const newUser = await db.insert(users).values({ 
-      name, email, password: hashedPassword 
+    const newExp = await db.insert(expenses).values({
+      userId: req.user.id,
+      amount,
+      category,
+      description,
+      createdAt: createdAt ? new Date(createdAt) : new Date()
     }).returning();
-    res.status(201).json({ message: "User created", userId: newUser[0].id });
+    
+    res.json(newExp);
   } catch (e) {
-    res.status(400).json({ error: "User already exists" });
+    res.status(500).json({ error: "Database error" });
   }
 });
 
-// Login
-app.post('/api/auth/login', async (req, res) => {
-  const { email, password } = req.body;
-  const userRecord = await db.select().from(users).where(eq(users.email, email));
-  
-  if (userRecord.length === 0) return res.status(404).json({ error: "User not found" });
-
-  const validPassword = await bcrypt.compare(password, userRecord[0].password);
-  if (!validPassword) return res.status(401).json({ error: "Invalid password" });
-
-  const token = jwt.sign({ id: userRecord[0].id, email: userRecord[0].email }, JWT_SECRET);
-  res.json({ token });
-});
-
-// --- PROTECTED ROUTES ---
-
-// Log an Expense (Protected)
-app.post('/api/expenses', authenticateToken, async (req: any, res) => {
-  const { amount, category, description } = req.body;
-  const newExpense = await db.insert(expenses).values({
-    userId: req.user.id, 
-    amount, 
-    category, 
-    description
-  }).returning();
-  res.json(newExpense);
-});
-
-// The Predictor Endpoint (Protected)
+// Protected Analysis
 app.get('/api/analysis', authenticateToken, async (req: any, res) => {
   const userId = req.user.id;
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0, 0, 0, 0);
 
-  // Get User's limit and history
-  const [userData] = await db.select().from(users).where(eq(users.id, userId));
+  // 1. Fetch data
+  const [user] = await db.select().from(users).where(eq(users.id, userId));
   const history = await db.select().from(expenses)
-    .where(eq(expenses.userId, userId))
+    .where(and(eq(expenses.userId, userId), gte(expenses.createdAt, startOfMonth)))
     .orderBy(expenses.createdAt);
 
-  if (history.length < 2) {
-    return res.json({ message: "Need more data points", prediction: null });
-  }
+  if (history.length < 2) return res.json({ message: "Not enough data" });
 
-  let runningTotal = 0;
-  const regressionPoints = history.map((exp) => {
-    const day = new Date(exp.createdAt!).getDate();
-    runningTotal += exp.amount;
-    return [day, runningTotal];
+  // 2. Logic: Totals & Categories
+  const categoryTotals: Record<string, number> = {};
+  let currentTotal = 0;
+
+  const points = history.map((exp) => {
+    currentTotal += exp.amount;
+    categoryTotals[exp.category] = (categoryTotals[exp.category] || 0) + exp.amount;
+    return [new Date(exp.createdAt!).getDate(), currentTotal];
   });
 
-  const line = linearRegression(regressionPoints);
-  const predictionEOM = line.m * 30 + line.b;
+  // 3. Math: Prediction
+  const { m, b } = linearRegression(points);
+  const prediction = Math.round(m * 30 + b);
+  const limit = user?.monthlyLimit || 10000;
 
+  // 4. Find Top Category
+  const topCat = Object.keys(categoryTotals).reduce((a, b) => 
+    categoryTotals[a] > categoryTotals[b] ? a : b
+  );
+
+  // 5. SEND UPDATED RESPONSE
   res.json({
-    currentTotal: runningTotal,
-    predictedTotal: Math.round(predictionEOM),
-    isOverBudget: predictionEOM > (userData?.monthlyLimit || 10000),
-    limit: userData?.monthlyLimit
+    currentTotal,
+    predictedTotal: prediction,
+    limit,
+    isOver: prediction > limit,
+    dailyBurnRate: m.toFixed(2),
+    breakdown: categoryTotals,
+    topExpense: {
+      category: topCat,
+      amount: categoryTotals[topCat],
+      percentage: ((categoryTotals[topCat] / currentTotal) * 100).toFixed(1) + "%"
+    }
   });
 });
 
-app.listen(3001, () => console.log('🚀 Secure Budget Server running on port 3001'));
+app.listen(3001, () => console.log('🚀 Server running on port 3001'));
