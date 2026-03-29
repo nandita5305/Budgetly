@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { Link } from 'react-router-dom';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -154,12 +155,12 @@ export default function App() {
             >
               <iconify-icon icon="solar:hamburger-menu-linear" className="text-[color:var(--text)] text-lg"></iconify-icon>
             </button>
-            <a href="#" className="hidden sm:block text-[13px] font-normal text-[color:var(--text-muted)] hover:text-[color:var(--text)] transition-colors">
+            <Link to="/login" className="hidden sm:block text-[13px] text-[color:var(--text-muted)] hover:text-[color:var(--text)] transition-colors">
               Log in
-            </a>
-            <a href="#quote" className="text-xs px-5 py-2.5 bg-[color:var(--text)] text-[color:var(--bg-main)] font-semibold rounded tracking-tight transition-all duration-300 hover:bg-white hover:shadow-[0_0_15px_rgba(255,255,255,0.3)] focus:outline-none focus:ring-2 focus:ring-white/25">
+            </Link>
+            <Link to="/signup" className="text-xs px-5 py-2.5 bg-[color:var(--text)] text-[color:var(--bg-main)] font-semibold rounded tracking-tight transition-all duration-300 hover:bg-white hover:shadow-[0_0_15px_rgba(255,255,255,0.3)]">
               Start Free
-            </a>
+            </Link>
           </div>
         </div>
       </nav>
