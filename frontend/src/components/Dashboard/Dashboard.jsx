@@ -25,9 +25,9 @@ export default function Dashboard() {
       setIsLoading(true);
       try {
         const [userRes, analysisRes, transactionsRes] = await Promise.all([
-          fetch('http://localhost:3001/api/user/me', { headers }),
-          fetch('http://localhost:3001/api/analysis', { headers }),
-          fetch('http://localhost:3001/api/expenses', { headers }),
+          fetch('https://budgetly-7s9d.onrender.com/api/user/me', { headers }),
+          fetch('https://budgetly-7s9d.onrender.com/api/analysis', { headers }),
+          fetch('https://budgetly-7s9d.onrender.com/api/expenses', { headers }),
         ]);
 
         if (userRes.ok) setUserData(await userRes.json());

@@ -25,8 +25,8 @@ export default function Settings() {
     const headers = { Authorization: `Bearer ${token}` };
     try {
       const [userRes, analysisRes] = await Promise.all([
-        fetch('http://localhost:3001/api/user/me', { headers }),
-        fetch('http://localhost:3001/api/analysis', { headers }),
+        fetch('https://budgetly-7s9d.onrender.com/api/user/me', { headers }),
+        fetch('https://budgetly-7s9d.onrender.com/api/analysis', { headers }),
       ]);
 
       if (userRes.ok) setUserData(await userRes.json());
@@ -59,7 +59,7 @@ export default function Settings() {
     const token = localStorage.getItem('token');
 
     try {
-      const res = await fetch('http://localhost:3001/api/update-budget', {
+      const res = await fetch('https://budgetly-7s9d.onrender.com/api/update-budget', {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,

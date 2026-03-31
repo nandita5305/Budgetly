@@ -30,8 +30,8 @@ const [analysisData, setAnalysisData] = useState({
     const headers = { Authorization: `Bearer ${token}` };
     try {
       const [userRes, analysisRes] = await Promise.all([
-        fetch('http://localhost:3001/api/user/me', { headers }),
-        fetch('http://localhost:3001/api/analysis', { headers }),
+        fetch('https://budgetly-7s9d.onrender.com/api/user/me', { headers }),
+        fetch('https://budgetly-7s9d.onrender.com/api/analysis', { headers }),
       ]);
 
       if (userRes.ok) setUserData(await userRes.json());
@@ -51,7 +51,7 @@ const [analysisData, setAnalysisData] = useState({
     const token = localStorage.getItem('token');
 
     try {
-      const res = await fetch('http://localhost:3001/api/expenses', {
+      const res = await fetch('https://budgetly-7s9d.onrender.com/api/expenses', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,

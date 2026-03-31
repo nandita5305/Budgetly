@@ -29,7 +29,7 @@ export default function AuthPage() {
     const endpoint = isLogin ? '/login' : '/register';
     
     try {
-      const response = await fetch(`http://localhost:3001/api/auth${endpoint}`, { // Adjust URL to your backend port
+      const response = await fetch(`https://budgetly-7s9d.onrender.com/api/auth${endpoint}`, { // Adjust URL to your backend port
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),

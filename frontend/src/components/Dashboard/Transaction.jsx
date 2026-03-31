@@ -20,8 +20,8 @@ export default function Transaction() {
     const headers = { Authorization: `Bearer ${token}` };
     try {
       const [userRes, transactionsRes] = await Promise.all([
-        fetch('http://localhost:3001/api/user/me', { headers }),
-        fetch('http://localhost:3001/api/expenses', { headers }),
+        fetch('https://budgetly-7s9d.onrender.com/api/user/me', { headers }),
+        fetch('https://budgetly-7s9d.onrender.com/api/expenses', { headers }),
       ]);
 
       if (userRes.ok) setUserData(await userRes.json());
@@ -39,7 +39,7 @@ export default function Transaction() {
     if (!window.confirm('Terminate this ledger entry?')) return;
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`http://localhost:3001/api/expenses/${id}`, {
+      const res = await fetch(`https://budgetly-7s9d.onrender.com/api/expenses/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });

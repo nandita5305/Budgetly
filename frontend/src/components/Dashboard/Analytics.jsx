@@ -27,8 +27,8 @@ export default function Analytics() {
       const headers = { Authorization: `Bearer ${token}` };
       try {
         const [userRes, analysisRes] = await Promise.all([
-          fetch('http://localhost:3001/api/user/me', { headers }),
-          fetch('http://localhost:3001/api/analysis', { headers }),
+          fetch('https://budgetly-7s9d.onrender.com/api/user/me', { headers }),
+          fetch('https://budgetly-7s9d.onrender.com/api/analysis', { headers }),
         ]);
         if (userRes.ok) setUserData(await userRes.json());
         if (analysisRes.ok) setAnalysisData(await analysisRes.json());
