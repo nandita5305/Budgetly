@@ -71,6 +71,10 @@ export default function App() {
   return (
     <div className="antialiased overflow-x-hidden selection:bg-orange-500 selection:text-white">
       <div className="fixed inset-0 -z-10 bg-[radial-gradient(60%_45%_at_50%_0%,rgba(249,115,22,0.28),transparent_70%),linear-gradient(to_bottom,#0b0b0b,#050505)]"></div>
+      <div className="parallax-wrapper">
+        <div className="bg-grid" style={{ opacity: 0.22 }}></div>
+      </div>
+      <div className="noise-overlay" style={{ zIndex: -1, opacity: 0.055 }}></div>
 
       {/* Navigation */}
       <nav className="fixed top-0 w-full z-40 bg-[color:var(--bg-main)]/80 backdrop-blur-md border-b border-[color:var(--border)]">
