@@ -8,6 +8,7 @@ import { expenses, users } from './db/schema';
 import { eq, and, gte } from 'drizzle-orm';
 import { linearRegression } from 'simple-statistics';
 import { expenseSchema } from './schemas/expense';
+import { sql } from 'drizzle-orm';
 
 const app = express();
 app.use(cors());
@@ -97,6 +98,24 @@ app.get('/api/analysis', authenticateToken, async (req: any, res) => {
       percentage: ((categoryTotals[topCat] / currentTotal) * 100).toFixed(1) + "%"
     }
   });
+});
+
+// GET All Expenses for the User (Protected)
+app.get('/api/expenses', authenticateToken, async (req: any, res) => {
+  try {
+    const userId = req.user.id;
+    
+    // Fetch expenses ordered by newest first
+    const userExpenses = await db.select()
+      .from(expenses)
+      .where(eq(expenses.userId, userId))
+      .orderBy(sql`${expenses.createdAt} DESC`);
+
+    // IMPORTANT: Return the array directly so the frontend can `.map()` it
+    res.json(userExpenses); 
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch transactions" });
+  }
 });
 
 app.listen(3001, () => console.log('🚀 Server running on port 3001'));
