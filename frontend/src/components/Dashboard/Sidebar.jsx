@@ -1,12 +1,21 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import { Icon } from '@iconify/react';
 
-export default function Sidebar({ navItems }) {
+const navItems = [
+  { id: 'dashboard', label: 'Dashboard', icon: 'solar:widget-5-bold-duotone', to: '/dashboard' },
+  { id: 'expenses', label: 'Expenses', icon: 'solar:card-2-bold-duotone', to: '/dashboard/expenses' },
+  { id: 'transactions', label: 'Transactions', icon: 'solar:reorder-bold-duotone', to: '/dashboard/transactions' },
+  { id: 'analytics', label: 'AI Analytics', icon: 'solar:graph-up-bold-duotone', to: '/dashboard/analytics' },
+  { id: 'settings', label: 'Settings', icon: 'solar:settings-bold-duotone', to: '/dashboard/settings' },
+];
+
+export default function Sidebar() {
   return (
     <aside className="w-64 h-full flex-shrink-0 border-r border-white/5 bg-black/40 backdrop-blur-3xl flex flex-col z-50 overflow-hidden">
       <div className="h-20 flex items-center px-6 mt-4">
         <div className="flex items-center">
-          <iconify-icon icon="solar:wallet-bold" className="text-orange-500 text-3xl mr-3 shadow-[0_0_20px_rgba(249,115,22,0.6)]"></iconify-icon>
+          <Icon icon="solar:wallet-bold" className="text-orange-500 text-3xl mr-3 shadow-[0_0_20px_rgba(249,115,22,0.6)]" />
           <span className="text-white font-display text-xl uppercase tracking-tighter cursor-default font-bold">Budgetly</span>
         </div>
       </div>
@@ -26,7 +35,7 @@ export default function Sidebar({ navItems }) {
               }`
             }
           >
-            <iconify-icon icon={item.icon} className="text-2xl"></iconify-icon>
+            <Icon icon={item.icon} className="text-2xl" />
             <span className="text-[12px] font-medium tracking-tight uppercase">{item.label}</span>
           </NavLink>
         ))}

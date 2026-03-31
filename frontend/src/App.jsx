@@ -2,12 +2,11 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './components/Home/Home'; 
 import Login from './components/Login/Login';
 import Signup from './components/Signup/Signup';
-import DashboardLayout from './components/Dashboard/DashboardLayout';
-import DashboardPage from './components/Dashboard/pages/DashboardPage';
-import ExpensesPage from './components/Dashboard/pages/ExpensesPage';
-import TransactionsPage from './components/Dashboard/pages/TransactionsPage';
-import AnalyticsPage from './components/Dashboard/pages/AnalyticsPage';
-import SettingsPage from './components/Dashboard/pages/SettingsPage';
+import Dashboard from './components/Dashboard/Dashboard';
+import Expense from './components/Dashboard/Expense';
+import Transaction from './components/Dashboard/Transaction';
+import Analytics from './components/Dashboard/Analytics';
+import Settings from './components/Dashboard/Settings';
 
 export default function App() {
   return (
@@ -20,13 +19,11 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
 
-        <Route path="/dashboard" element={<DashboardLayout />}>
-          <Route index element={<DashboardPage />} />
-          <Route path="expenses" element={<ExpensesPage />} />
-          <Route path="transactions" element={<TransactionsPage />} />
-          <Route path="analytics" element={<AnalyticsPage />} />
-          <Route path="settings" element={<SettingsPage />} />
-        </Route>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/dashboard/expenses" element={<Expense />} />
+        <Route path="/dashboard/transactions" element={<Transaction />} />
+        <Route path="/dashboard/analytics" element={<Analytics />} />
+        <Route path="/dashboard/settings" element={<Settings />} />
       </Routes>
     </Router>
   );

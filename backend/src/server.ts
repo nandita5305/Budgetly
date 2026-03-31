@@ -1,27 +1,28 @@
 import express from 'express';
 import cors from 'cors';
 import 'dotenv/config';
+import { sql, eq, and, gte } from 'drizzle-orm';
+
+// Route Imports
 import authRoutes from './routes/auth';
+import analysisRoutes from './routes/analysis';
+import userRoutes from './routes/user';
 import { authenticateToken } from './middleware/auth';
 import { db } from './db';
 import { expenses, users } from './db/schema';
-import { eq, and, gte } from 'drizzle-orm';
-import { linearRegression } from 'simple-statistics';
 import { expenseSchema } from './schemas/expense';
-import { sql } from 'drizzle-orm';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Public Routes
-app.use('/api/auth', authRoutes);
+// --- 1. ROUTE REGISTRATION ---
+app.use('/api/auth', authRoutes);     // Public: Login/Register
+app.use('/api/user', userRoutes);     // Protected: Identity (Name, Email)
+app.use('/api/analysis', analysisRoutes); // Protected: Dashboard Math
 
-// Protected Expense Logging
-
-
+// --- 2. EXPENSE LOGGING (POST) ---
 app.post('/api/expenses', authenticateToken, async (req: any, res) => {
-  // 1. Validate Input
   const result = expenseSchema.safeParse(req.body);
   
   if (!result.success) {
@@ -31,7 +32,6 @@ app.post('/api/expenses', authenticateToken, async (req: any, res) => {
     });
   }
 
-  // 2. If valid, proceed to DB
   const { amount, category, description, createdAt } = result.data;
   
   try {
@@ -49,72 +49,63 @@ app.post('/api/expenses', authenticateToken, async (req: any, res) => {
   }
 });
 
-// Protected Analysis
-app.get('/api/analysis', authenticateToken, async (req: any, res) => {
-  const userId = req.user.id;
-  const startOfMonth = new Date();
-  startOfMonth.setDate(1);
-  startOfMonth.setHours(0, 0, 0, 0);
-
-  // 1. Fetch data
-  const [user] = await db.select().from(users).where(eq(users.id, userId));
-  const history = await db.select().from(expenses)
-    .where(and(eq(expenses.userId, userId), gte(expenses.createdAt, startOfMonth)))
-    .orderBy(expenses.createdAt);
-
-  if (history.length < 2) return res.json({ message: "Not enough data" });
-
-  // 2. Logic: Totals & Categories
-  const categoryTotals: Record<string, number> = {};
-  let currentTotal = 0;
-
-  const points = history.map((exp) => {
-    currentTotal += exp.amount;
-    categoryTotals[exp.category] = (categoryTotals[exp.category] || 0) + exp.amount;
-    return [new Date(exp.createdAt!).getDate(), currentTotal];
-  });
-
-  // 3. Math: Prediction
-  const { m, b } = linearRegression(points);
-  const prediction = Math.round(m * 30 + b);
-  const limit = user?.monthlyLimit || 10000;
-
-  // 4. Find Top Category
-  const topCat = Object.keys(categoryTotals).reduce((a, b) => 
-    categoryTotals[a] > categoryTotals[b] ? a : b
-  );
-
-  // 5. SEND UPDATED RESPONSE
-  res.json({
-    currentTotal,
-    predictedTotal: prediction,
-    limit,
-    isOver: prediction > limit,
-    dailyBurnRate: m.toFixed(2),
-    breakdown: categoryTotals,
-    topExpense: {
-      category: topCat,
-      amount: categoryTotals[topCat],
-      percentage: ((categoryTotals[topCat] / currentTotal) * 100).toFixed(1) + "%"
-    }
-  });
-});
-
-// GET All Expenses for the User (Protected)
+// --- 3. GET ALL EXPENSES (GET) ---
 app.get('/api/expenses', authenticateToken, async (req: any, res) => {
   try {
     const userId = req.user.id;
     
-    // Fetch expenses ordered by newest first
     const userExpenses = await db.select()
       .from(expenses)
       .where(eq(expenses.userId, userId))
       .orderBy(sql`${expenses.createdAt} DESC`);
 
-    // IMPORTANT: Return the array directly so the frontend can `.map()` it
     res.json(userExpenses); 
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch transactions" });
+  }
+});
+
+// --- 4. DELETE EXPENSE (DELETE) ---
+app.delete('/api/expenses/:id', authenticateToken, async (req: any, res) => {
+  try {
+    const userId = req.user.id;
+    const expenseId = parseInt(req.params.id, 10);
+
+    const result = await db.delete(expenses)
+      .where(and(
+        eq(expenses.id, expenseId),
+        eq(expenses.userId, userId)
+      ))
+      .returning();
+
+    if (result.length === 0) {
+      return res.status(404).json({ error: "Transaction not found or unauthorized" });
+    }
+
+    res.json({ message: "Transaction deleted successfully", deleted: result[0] });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// --- 5. UPDATE BUDGET & PROFILE (PUT) ---
+app.put('/api/update-budget', authenticateToken, async (req: any, res) => {
+  const userId = req.user.id;
+  const { name, email, budgetLimit } = req.body;
+
+  try {
+    await db.update(users)
+      .set({ 
+        name: name,
+        email: email,
+        monthlyLimit: Number(budgetLimit) 
+      })
+      .where(eq(users.id, userId));
+
+    res.json({ success: true, message: "Engine Preferences Synchronized" });
+  } catch (error) {
+    console.error("Update Error:", error);
+    res.status(500).json({ error: "Failed to update configuration" });
   }
 });
 
