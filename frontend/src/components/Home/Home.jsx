@@ -11,31 +11,7 @@ export default function App() {
   const [activePipeline, setActivePipeline] = useState(0);
 
   useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "https://cdn.jsdelivr.net/gh/hiunicornstudio/unicornstudio.js@v1.4.29/dist/unicornStudio.umd.js";
-    script.async = true;
-    script.onload = () => {
-      if (window.UnicornStudio && !window.UnicornStudio.isInitialized) {
-        window.UnicornStudio.init();
-        window.UnicornStudio.isInitialized = true;
-      }
-    };
-    document.body.appendChild(script);
-
     const ctx = gsap.context(() => {
-      const parallaxGrid = document.getElementById('parallax-grid');
-      const glow1 = document.getElementById('parallax-glow-1');
-      const glow2 = document.getElementById('parallax-glow-2');
-
-      const handleScroll = () => {
-        const scrolled = window.scrollY;
-        if (parallaxGrid) parallaxGrid.style.transform = `perspective(500px) rotateX(20deg) translateY(${scrolled * 0.2}px)`;
-        if (glow1) glow1.style.transform = `translateY(${scrolled * 0.4}px)`;
-        if (glow2) glow2.style.transform = `translateY(${scrolled * 0.15}px)`;
-      };
-
-      window.addEventListener('scroll', handleScroll);
-
       const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
       if (prefersReducedMotion) {
@@ -81,14 +57,10 @@ export default function App() {
         });
       }
 
-      return () => window.removeEventListener('scroll', handleScroll);
     });
 
     return () => {
       ctx.revert();
-      if (document.body.contains(script)) {
-        document.body.removeChild(script);
-      }
     };
   }, []);
 
@@ -98,28 +70,7 @@ export default function App() {
 
   return (
     <div className="antialiased overflow-x-hidden selection:bg-orange-500 selection:text-white">
-      {/* Background Component */}
-      <div 
-        className="aura-background-component fixed top-0 w-full h-screen -z-10" 
-        data-alpha-mask="80" 
-        style={{
-          maskImage: 'linear-gradient(to bottom, transparent, black 0%, black 80%, transparent)', 
-          WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 0%, black 80%, transparent)'
-        }}
-      >
-        <div className="aura-background-component top-0 w-full -z-10 absolute h-full">
-          <div data-us-project="4gq2Yrv2p0bIa0hdLPQx" className="absolute w-full h-full left-0 top-0 -z-10"></div>
-        </div>
-      </div>
-          
-      {/* Parallax Background System */}
-      <div className="parallax-wrapper">
-        <div className="bg-grid" id="parallax-grid"></div>
-        <div className="bg-glow-1" id="parallax-glow-1"></div>
-        <div className="bg-glow-2" id="parallax-glow-2"></div>
-      </div>
-      
-      <div className="noise-overlay"></div>
+      <div className="fixed inset-0 -z-10 bg-[radial-gradient(60%_45%_at_50%_0%,rgba(249,115,22,0.28),transparent_70%),linear-gradient(to_bottom,#0b0b0b,#050505)]"></div>
 
       {/* Navigation */}
       <nav className="fixed top-0 w-full z-40 bg-[color:var(--bg-main)]/80 backdrop-blur-md border-b border-[color:var(--border)]">
