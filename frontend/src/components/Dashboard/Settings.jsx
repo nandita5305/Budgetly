@@ -67,7 +67,7 @@ export default function Settings() {
         },
         body: JSON.stringify({
           name: settings.name,
-          email: settings.email,
+          // EMAIL REMOVED FROM PAYLOAD TO MATCH BACKEND
           budgetLimit: Number(settings.monthlyLimit),
         }),
       });
@@ -121,8 +121,9 @@ export default function Settings() {
                     <label className="text-[10px] font-mono text-gray-500 uppercase ml-2">Network Email</label>
                     <input
                       type="email"
+                      disabled
                       value={settings.email}
-                      onChange={(e) => setSettings({ ...settings, email: e.target.value })}
+                      
                       className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-white font-mono focus:border-orange-500/50 outline-none transition-all"
                     />
                   </div>

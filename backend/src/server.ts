@@ -91,13 +91,12 @@ app.delete('/api/expenses/:id', authenticateToken, async (req: any, res) => {
 // --- 5. UPDATE BUDGET & PROFILE (PUT) ---
 app.put('/api/update-budget', authenticateToken, async (req: any, res) => {
   const userId = req.user.id;
-  const { name, email, budgetLimit } = req.body;
+  const { name, budgetLimit } = req.body;
 
   try {
     await db.update(users)
       .set({ 
         name: name,
-        email: email,
         monthlyLimit: Number(budgetLimit) 
       })
       .where(eq(users.id, userId));
